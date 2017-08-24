@@ -1,0 +1,41 @@
+//Inspired by: https://davidwalsh.name/write-media-queries-sass
+
+$mobile-width: 320px;
+$tablet-width: 768px;
+$desktop-width: 1024px;
+$large-desktop-width: 1440px;
+
+//Specific to mobile devices
+@mixin mobile {
+    @media (min-width: #{$mobile-width}) and (max-width: #{$tablet-width - 1px}) {
+      @content;
+    }
+}
+
+//Specific to tablet devices
+@mixin tablet {
+  @media (min-width: #{$tablet-width}) and (max-width: #{$desktop-width - 1px}) {
+    @content;
+  }
+}
+
+//Specific to desktop devices
+@mixin desktop {
+  @media (min-width: #{$desktop-width}) {
+    @content;
+  }
+}
+
+//All Mobile Devices including tablets
+@mixin all-mobile {
+    @media (max-width: #{$tablet-width}) {
+      @content;
+    }
+}
+
+//No Mobile devices, include tablets
+@mixin not-mobile {
+    @media (min-width: #{$tablet-width}) {
+      @content;
+    }
+}

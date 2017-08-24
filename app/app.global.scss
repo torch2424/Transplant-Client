@@ -1,0 +1,20 @@
+// Import our global styles
+@import './styles/mediaQuery.scss';
+@import './styles/bem.scss';
+@import './styles/animate.scss';
+@import './styles/variables.scss';
+
+// Page/Component Styles
+@import './pages/home/home.scss';
+@import './pages/ftpBrowser/ftpBrowser.scss';
+@import './pages/counter/counter.scss';
+
+// General styles
+body {
+  position: relative;
+  color: $standard;
+  height: 100vh;
+  background-color: $bgColor;
+  font-family: Arial, Helvetica, Helvetica Neue, serif;
+  overflow-y: hidden;
+}
