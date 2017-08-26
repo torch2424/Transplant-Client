@@ -1,0 +1,9 @@
+{
+  "generator-node": {
+    "promptValues": {
+      "authorName": "Aaron Turner",
+      "authorEmail": "aaron@aaronthedev.com",
+      "authorUrl": "aaronthedev.com"
+    }
+  }
+}

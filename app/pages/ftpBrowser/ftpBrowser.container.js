@@ -9,11 +9,16 @@ function mapStateToProps(state) {
   // Grab our response, use the state to grab the current shared ftp client
   const response = {
     client: state.sftp.client,
-    isLoading: false
+    path: '',
+    isLoading: {}
   };
 
   if (state.sftp && state.sftp.isLoading) {
-    response.isLoading = true;
+    response.isLoading = state.sftp.isLoading;
+  }
+
+  if (state.sftp && state.sftp.path) {
+    response.path = state.sftp.path;
   }
 
   return response;

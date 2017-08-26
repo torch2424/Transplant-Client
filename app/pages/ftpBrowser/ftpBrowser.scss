@@ -1,0 +1,22 @@
+.ftp-browser {
+	height: 100%;
+	display: flex;
+	flex-flow: column;
+
+	@include element('logout') {
+		margin-top: 10px;
+		margin-bottom: 10px
+	}
+
+	@include element('file-path') {
+		margin-top: 10px;
+		margin-bottom: 10px
+	}
+
+	@include element('file-list') {
+		margin-top: 10px;
+		margin-bottom: 10px;
+		overflow-x: auto;
+		overflow-y: auto;
+	}
+}

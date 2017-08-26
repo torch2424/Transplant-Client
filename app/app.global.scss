@@ -7,7 +7,9 @@
 // Page/Component Styles
 @import './pages/home/home.scss';
 @import './pages/ftpBrowser/ftpBrowser.scss';
-@import './pages/counter/counter.scss';
+@import './pages/ftpBrowser/components/fileList/fileList.scss';
+@import './pages/ftpBrowser/components/fileItem/fileItem.scss';
+@import './pages/ftpBrowser/components/filePath/filePath.scss';
 
 // General styles
 body {
@@ -17,4 +19,8 @@ body {
   background-color: $bgColor;
   font-family: Arial, Helvetica, Helvetica Neue, serif;
   overflow-y: hidden;
+}
+
+#root, div[data-reactroot] {
+	height: 100%;
 }

@@ -1,6 +1,9 @@
 import React, { Component } from 'react';
 import LinearProgress from 'material-ui/LinearProgress';
 
+// Import our file items
+import FileItem from '../fileItem/fileItem.container';
+
 export default class FileList extends Component {
 
   // Declare our props
@@ -8,9 +11,11 @@ export default class FileList extends Component {
   // obj --> JSON Object
   props: {
     client: obj,
-    isLoading: boolean,
+    isLoading: obj,
     listFiles: () => void,
-    files: Array<obj>
+    files: Array<obj>,
+    path: string,
+    initialPath: string
   }
 
   // Our constructor, where we shall be setting state
@@ -18,31 +23,58 @@ export default class FileList extends Component {
     super(props);
 
     if (!this.props.files || this.props.files.length < 1) {
-      this.props.listFiles(this.props.client, '/');
+      this.props.listFiles(this.props.client, '.');
     }
   }
 
   render() {
-    console.log('rendered!');
     // Get the files if we dont have them
     let fileList = [];
     if (this.props.files && this.props.files.length > 0) {
+      // Push the initial horizontal divider
+      fileList.push((
+        <hr key={Math.random()} />
+      ));
+
+      // Check if we can go to the parent directory
+      if (this.props.initialPath &&
+        this.props.path &&
+        this.props.initialPath.split('/').length <
+        this.props.path.split('/').length
+      ) {
+        const parentDir = {
+          filename: '..',
+          longname: 'd'
+        };
+        fileList.push((
+          <div key={Math.random()}>
+            <FileItem
+              file={parentDir}
+            />
+            <hr />
+          </div>
+        ));
+      }
+
       this.props.files.forEach((file) => {
         console.log(file);
         fileList.push((
           <div key={Math.random()}>
-            {file.filename}
+            <FileItem
+              file={file}
+            />
+            <hr />
           </div>
         ));
       });
     } else {
       fileList = (
-        <div />
+        <div key={Math.random()} />
       );
     }
 
     let loadingBar;
-    if (this.props.isLoading) {
+    if (this.props.isLoading.listFiles) {
       loadingBar = (
         <LinearProgress mode="indeterminate" />
       );
@@ -54,8 +86,6 @@ export default class FileList extends Component {
 
     return (
       <div>
-        <h1>Hello! I am the File list component</h1>
-
         <div /* Loading Bar for when we are connecting */>
           { loadingBar }
         </div>

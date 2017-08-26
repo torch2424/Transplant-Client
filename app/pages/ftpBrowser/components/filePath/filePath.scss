@@ -1,0 +1,7 @@
+.file-path {
+	margin-top: 10px;
+
+	@include element('label') {
+		font-weight: bold;
+	}
+}

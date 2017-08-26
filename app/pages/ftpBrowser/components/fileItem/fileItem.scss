@@ -1,0 +1,11 @@
+.file-item {
+	@include element('row') {
+		display: flex;
+		align-items: center;
+		cursor: pointer;
+
+		@include element('item') {
+			margin-right: 10px;
+		}
+	}
+}

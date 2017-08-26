@@ -6,7 +6,6 @@ import { createLogger } from 'redux-logger';
 import rootReducer from '../root.reducer';
 
 // Need these imports for better logging
-import * as counterActions from '../pages/counter/counter.action';
 import * as sftpActions from '../services/sftp/sftp.action';
 
 const history = createHashHistory();
@@ -32,7 +31,6 @@ const configureStore = (initialState) => {
 
   // Redux DevTools Configuration
   const actionCreators = {
-    ...counterActions,
     ...sftpActions,
     ...routerActions,
   };

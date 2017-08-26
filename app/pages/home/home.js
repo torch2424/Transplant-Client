@@ -1,5 +1,4 @@
 import React, { Component } from 'react';
-import { Link } from 'react-router-dom';
 import TextField from 'material-ui/TextField';
 import RaisedButton from 'material-ui/RaisedButton';
 import LinearProgress from 'material-ui/LinearProgress';
@@ -9,14 +8,14 @@ export default class Home extends Component {
   // Our props, they are immutable, and passed by parent
   props: {
     connect: () => void,
-    isLoading: boolean
+    isLoading: obj
   }
 
   // Our constructor, where we shall be setting state
   constructor(props) {
     super(props);
 
-    // Stat should be used for component based state, where store is used for global app state
+    // State should be used for component based state, where store is used for global app state
     this.state = {
       username: '',
       host: '',
@@ -35,7 +34,7 @@ export default class Home extends Component {
   render() {
     let loadingBar;
 
-    if (this.props.isLoading) {
+    if (this.props.isLoading.connect) {
       loadingBar = (
         <LinearProgress mode="indeterminate" />
       );
@@ -76,7 +75,7 @@ export default class Home extends Component {
             hintText="transplant"
             value={this.state.username}
             onChange={this.textChange}
-            disabled={this.props.isLoading} />
+            disabled={this.props.isLoading.connect} />
           <span>
             @
           </span>
@@ -86,7 +85,7 @@ export default class Home extends Component {
             value={this.state.host}
             onChange={this.textChange}
             hintText="localhost"
-            disabled={this.props.isLoading} />
+            disabled={this.props.isLoading.connect} />
 
           <div>
             Port:
@@ -95,7 +94,7 @@ export default class Home extends Component {
               name="port"
               hintText="22"
               value={this.state.port}
-              disabled={this.props.isLoading}
+              disabled={this.props.isLoading.connect}
               onChange={(event, newValue) => {
                 // Ensure it is numbers only
                 // Material-ui text input doesn't have a number mode
@@ -112,7 +111,7 @@ export default class Home extends Component {
               hintText="Password"
               onChange={this.textChange}
               value={this.state.password}
-              disabled={this.props.isLoading}
+              disabled={this.props.isLoading.connect}
               type="password" />
           </div>
 
@@ -120,12 +119,8 @@ export default class Home extends Component {
             <RaisedButton /* submit/connect button */
               label="Connect"
               primary
-              disabled={this.props.isLoading}
+              disabled={this.props.isLoading.connect}
               type="submit" />
-          </div>
-
-          <div>
-            <Link to="/counter">to Counter</Link>
           </div>
         </form>
       </div>
