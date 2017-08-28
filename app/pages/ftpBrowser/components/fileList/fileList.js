@@ -30,34 +30,36 @@ export default class FileList extends Component {
   render() {
     // Get the files if we dont have them
     let fileList = [];
-    if (this.props.files && this.props.files.length > 0) {
-      // Push the initial horizontal divider
+
+    // Push the initial horizontal divider
+    fileList.push((
+      <hr key={Math.random()} />
+    ));
+
+    // Check if we can go to the parent directory
+    if (!this.props.isLoading.listFiles &&
+      this.props.initialPath &&
+      this.props.path &&
+      this.props.initialPath.split('/').length <
+      this.props.path.split('/').length
+    ) {
+      const parentDir = {
+        filename: '..',
+        longname: 'd'
+      };
       fileList.push((
-        <hr key={Math.random()} />
+        <div key={Math.random()}>
+          <FileItem
+            file={parentDir}
+          />
+          <hr />
+        </div>
       ));
+    }
 
-      // Check if we can go to the parent directory
-      if (this.props.initialPath &&
-        this.props.path &&
-        this.props.initialPath.split('/').length <
-        this.props.path.split('/').length
-      ) {
-        const parentDir = {
-          filename: '..',
-          longname: 'd'
-        };
-        fileList.push((
-          <div key={Math.random()}>
-            <FileItem
-              file={parentDir}
-            />
-            <hr />
-          </div>
-        ));
-      }
-
+    // Push the files we have in our files array
+    if (this.props.files && this.props.files.length > 0) {
       this.props.files.forEach((file) => {
-        console.log(file);
         fileList.push((
           <div key={Math.random()}>
             <FileItem
@@ -67,7 +69,12 @@ export default class FileList extends Component {
           </div>
         ));
       });
-    } else {
+    }
+
+    // Check if we have an empty fileList
+    // (Just the initial <hr /> we pushed earlier)
+    // If so, just set a div to be rendered
+    if (fileList.length < 2) {
       fileList = (
         <div key={Math.random()} />
       );

@@ -23,12 +23,15 @@ export default class FtpBrowser extends Component {
     super(props);
 
     // Call to get our current directory
-    this.props.getInitialDirectory(this.props.client);
+    if (!this.props.path) {
+      this.props.getInitialDirectory(this.props.client);
+    }
   }
 
   render() {
     let filePath;
-    if (this.props.isLoading.getInitialDirectory ||
+    if (!this.props.path ||
+    this.props.isLoading.getInitialDirectory ||
     this.props.isLoading.goToDirectory) {
       filePath = (
         <LinearProgress mode="indeterminate" />
@@ -44,6 +47,10 @@ export default class FtpBrowser extends Component {
       <div className="ftp-browser">
         <div className="ftp-browser__logout">
           <Link to="/" onClick={this.props.logout}>Logout</Link>
+        </div>
+
+        <div className="ftp-browser__pending">
+          <Link to="/pending">Pending Transfers</Link>
         </div>
 
         <div className="ftp-browser__file-path">

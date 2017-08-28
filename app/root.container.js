@@ -9,6 +9,10 @@ type RootType = {
 };
 
 export default function Root({ store, history }: RootType) {
+  // if our state does not have a location, go to the intitial page
+  if (!store.getState().router.location) {
+    history.replace('/');
+  }
   return (
     <Provider store={store}>
       <ConnectedRouter history={history}>

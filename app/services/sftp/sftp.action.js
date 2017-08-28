@@ -24,6 +24,7 @@ export const GO_TO_DIRECTORY_START = 'GO_TO_DIRECTORY_START';
 export const GO_TO_DIRECTORY_SUCCESS = 'GO_TO_DIRECTORY_SUCCESS';
 
 export const DOWNLOAD_FILE_START = 'DOWNLOAD_FILE_START';
+export const DOWNLOAD_FILE_PROGRESS = 'DOWNLOAD_FILE_PROGRESS';
 export const DOWNLOAD_FILE_SUCCESS = 'DOWNLOAD_FILE_SUCCESS';
 
 // Get some electron goodies
@@ -144,7 +145,12 @@ export function goToDirectory(sftpClient, currentDirectory, directory) {
   }
 
   // Define our new directory
-  const newDirectory = currentDirectory + directory;
+  let newDirectory = '';
+  if (currentDirectory.substr(-1) !== '/') {
+    newDirectory = `${currentDirectory}/${directory}`;
+  } else {
+    newDirectory = currentDirectory + directory;
+  }
 
   // dispatch our actions
   return (dispatch) => {
@@ -159,7 +165,7 @@ export function goToDirectory(sftpClient, currentDirectory, directory) {
         throw err;
       }
 
-      // Dispatch the sucessful connection ot our reducer
+      // Dispatch the sucessful connection to our reducer
       dispatch({
         type: GO_TO_DIRECTORY_SUCCESS,
         directory
@@ -186,20 +192,35 @@ export function downloadFile(sftpClient, directory, fileName) {
     // start loading
     dispatch({
       type: DOWNLOAD_FILE_START,
-      isLoading: true
+      isLoading: true,
+      remotePath: filePath,
     });
 
     // Download the file
     // Using electron app to get downloads folder:
     // https://discuss.atom.io/t/get-special-folder-path-in-electron/30198/3
-    sftpClient.fastGet(filePath, downloadPath, {}, (err) => {
+    sftpClient.fastGet(filePath, downloadPath, {
+      step: (transferProgress, fileChunk, totalSize) => {
+        // Returns size in bytes.
+        // So, / 1000000 for MB
+        // / 1000000000 for GB
+        // Or use preety bytes: https://www.npmjs.com/package/pretty-bytes
+        dispatch({
+          type: DOWNLOAD_FILE_PROGRESS,
+          remotePath: filePath,
+          transferProgress,
+          totalSize
+        });
+      }
+    }, (err) => {
       if (err) {
         throw err;
       }
 
       // Dispatch the sucessful connection ot our reducer
       dispatch({
-        type: DOWNLOAD_FILE_SUCCESS
+        type: DOWNLOAD_FILE_SUCCESS,
+        remotePath: filePath
       });
     });
   };
