@@ -4,6 +4,12 @@
 // This is where business logic is performed
 import * as ssh from 'ssh2';
 
+// Import the transplat wrapper
+import { Transplant, TYPE } from '../transplant';
+
+// Import the credential storage
+import * as credentialStorage from '../credentialStorage';
+
 // Import history for navigation from our store (Switches between hash and browser for us)
 import { history } from '../../store/configureStore';
 
@@ -36,6 +42,15 @@ export function connect(event, loginInfo) {
   // Stop the default event
   event.preventDefault();
 
+  const transplant = new Transplant(TYPE.SFTP);
+  transplant.connect(loginInfo.host,
+    loginInfo.username, loginInfo.password, loginInfo.port).then(() => {
+      console.log('hi!', transplant);
+      return true;
+    }).catch(() => {
+      console.log('error!', transplant);
+    });
+
   // Wrap in dispatch to allow communication with reducer
   return (dispatch) => {
     // Start the connection
@@ -44,14 +59,21 @@ export function connect(event, loginInfo) {
       client.sftp((err, sftpClient) => {
         if (err) throw err;
 
-        // Dispatch the sucessful connection ot our reducer
-        dispatch({
-          type: CONNECT_SUCCESS,
-          client: sftpClient
-        });
+        // Save our credentials because of the succssful connection
+        credentialStorage.setCredentials(TYPE.SFTP, loginInfo.host,
+          loginInfo.username, loginInfo.password, loginInfo.port)
+          .then(() => {
+            // Dispatch the sucessful connection ot our reducer
+            dispatch({
+              type: CONNECT_SUCCESS,
+              client: sftpClient
+            });
 
-        // Move to the ftpbrowser page
-        history.push('/view');
+            // Move to the ftpbrowser page
+            history.push('/view');
+          }).catch((credErr) => {
+            console.log(credErr);
+          });
       });
     }).connect({
       host: loginInfo.host,

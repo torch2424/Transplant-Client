@@ -2,6 +2,8 @@ import React, { Component } from 'react';
 import TextField from 'material-ui/TextField';
 import RaisedButton from 'material-ui/RaisedButton';
 import LinearProgress from 'material-ui/LinearProgress';
+// Import the credential storage
+import * as credentialStorage from '../../services/credentialStorage';
 
 export default class Home extends Component {
 
@@ -20,8 +22,34 @@ export default class Home extends Component {
       username: '',
       host: '',
       port: '22',
-      password: '',
+      password: ''
     };
+  }
+
+  componentDidMount() {
+    const savedConnections = [];
+    const accounts = credentialStorage.getAllAccounts();
+    // Loop through our account keys
+    accounts.forEach((account) => {
+      savedConnections.push((
+        <div key={Math.random()}>
+          <div
+            className="connections-container__connection"
+            role="button"
+            tabIndex="0"
+            onClick={() => this.setAccount(account.accountKey)}>
+            {account.decodedAccountKey}
+          </div>
+
+          <hr />
+        </div>
+      ));
+
+      // Must use setState to cause a re-render on state change
+      this.setState({
+        savedConnections
+      });
+    });
   }
 
   // Our text change handler
@@ -29,6 +57,20 @@ export default class Home extends Component {
     const stateChange = {};
     stateChange[event.target.name] = newValue;
     this.setState(stateChange);
+  }
+
+  // Set a selected saved accounts
+  setAccount = (accountKey) => {
+    credentialStorage.getAccountWithPass(accountKey).then((account) => {
+      this.setState({
+        username: account.username,
+        host: account.host,
+        port: account.port,
+        password: account.password
+      });
+    }).catch((err) => {
+      console.log(err);
+    });
   }
 
   render() {
@@ -40,6 +82,27 @@ export default class Home extends Component {
       );
     } else {
       loadingBar = (
+        <div />
+      );
+    }
+
+    // Get our saved connections
+    let savedConnectionsContainer;
+    if (this.state.savedConnections &&
+      this.state.savedConnections.length > 0) {
+      savedConnectionsContainer = (
+        <div className="connections-container">
+          <h2 className="connections-container__title">
+            Saved Connections:
+          </h2>
+
+          <hr />
+
+          {this.state.savedConnections}
+        </div>
+      );
+    } else {
+      savedConnectionsContainer = (
         <div />
       );
     }
@@ -123,6 +186,8 @@ export default class Home extends Component {
               type="submit" />
           </div>
         </form>
+
+        { savedConnectionsContainer }
       </div>
     );
   }

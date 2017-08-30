@@ -10,6 +10,8 @@
     "node": true
   },
   "rules": {
+    "no-underscore-dangle": "off",
+    "no-param-reassign": "off",
     "arrow-parens": ["off"],
     "compat/compat": "error",
     "consistent-return": "off",
@@ -22,7 +24,7 @@
     "no-use-before-define": "off",
     "no-multi-assign": "off",
     "promise/param-names": "error",
-    "promise/always-return": "error",
+    "promise/always-return": "off",
     "promise/catch-or-return": "error",
     "promise/no-native": "off",
     "react/sort-comp": ["error", {
