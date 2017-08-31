@@ -23,10 +23,10 @@ db.defaults({ accounts: [] })
   .write();
 
 // Private function to return an encoded key for password and json
-function _createKey(type, host, username, port) {
+function _createKey(protocol, host, username, port) {
   // Using {{dot}} to replace the literal '.' to help with json storage
   host = host.replace(/\./g, '{{dot}}');
-  return `${type}${username}@${host}:${port}`;
+  return `${protocol}${username}@${host}:${port}`;
 }
 
 // Private function to return our decoded key for password and json
@@ -37,38 +37,35 @@ function _decodeKey(accountKey) {
 
 /**
 * Function to set the passed credentials
-* @param type - Transplatn TYPE
+* @param protocol - Transplant Protocol
 * @param host - Host address of the server
 * @param username - username of the user on the server
 * @param password - password of the user on the server
 * @param port - port of the server that is running
 * @returns Promise, rejects if could not set the password
 */
-export function setCredentials(type, host, username, password, port) {
+export function setCredentials(protocol, host, username, password, port) {
   return new Promise((resolve, reject) => {
-    const accountKey = _createKey(type, host, username, port);
+    const accountKey = _createKey(protocol, host, username, port);
 
     // Create/Set our new credentials
+    const account = {
+      lastUsed: Date.now(),
+      accountKey,
+      decodedAccountKey: _decodeKey(accountKey),
+      protocol,
+      host,
+      username,
+      port
+    };
+
+    // Check if we need to create our update the account
     if (db.get('accounts').find({ accountKey }).value()) {
       db.get('accounts').find({ accountKey })
-      .assign({
-        accountKey,
-        decodedAccountKey: _decodeKey(accountKey),
-        type,
-        host,
-        username,
-        port
-      }).write();
+      .assign(account).write();
     } else {
       db.get('accounts')
-      .push({
-        accountKey,
-        decodedAccountKey: _decodeKey(accountKey),
-        type,
-        host,
-        username,
-        port
-      }).write();
+      .push(account).write();
     }
 
     // Set our passwords
@@ -84,7 +81,8 @@ export function setCredentials(type, host, username, password, port) {
 * Function to return all accounts on the device, without passwords
 */
 export function getAllAccounts() {
-  return db.get('accounts').value();
+  // Get the accounts, sort by last used, and reverse as Date.now() returns EPOCH
+  return db.get('accounts').sortBy('lastUsed').value().reverse();
 }
 
 /**

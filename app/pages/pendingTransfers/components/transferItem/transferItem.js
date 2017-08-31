@@ -49,7 +49,7 @@ export default class TransferItem extends Component {
         <div>
           <LinearProgress
             mode="determinate"
-            min="0"
+            min={0}
             max={this.state.total}
             value={this.state.progress} />
           <div className="transfer-item__progress">

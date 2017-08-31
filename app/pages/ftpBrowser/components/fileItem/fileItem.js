@@ -6,7 +6,7 @@ export default class FileItem extends Component {
 
   // Declare our props
   props: {
-    client: obj,
+    transplant: obj,
     path: string,
     file: obj,
     isLoading: obj,
@@ -19,9 +19,7 @@ export default class FileItem extends Component {
     super(props);
 
     // State should be used for component based state, where store is used for global app state
-    this.state = {
-      isDir: false
-    };
+    this.state = {};
 
     // This binding is necessary to make `this` work in the callback
     this.handleClick = this.handleClick.bind(this);
@@ -34,22 +32,17 @@ export default class FileItem extends Component {
     }
 
     // If we are a directory, go to the directory
-    if (this.state.isDir) {
-      this.props.goToDirectory(this.props.client, this.props.path, this.props.file.filename);
+    if (this.props.file.isDir) {
+      this.props.goToDirectory(this.props.transplant, this.props.path, this.props.file.fileName);
     } else {
-      this.props.downloadFile(this.props.client, this.props.path, this.props.file.filename);
+      this.props.downloadFile(this.props.transplant, this.props.path, this.props.file.fileName);
     }
   }
 
   render() {
-    // Decide if we are a directory
-    if (this.props.file.longname.charAt(0) === 'd') {
-      this.state.isDir = true;
-    }
-
     // First get our icon
     let icon;
-    if (this.state.isDir) {
+    if (this.props.file.isDir) {
       icon = (
         <FileFolder />
       );
@@ -61,10 +54,10 @@ export default class FileItem extends Component {
 
     // Then get our file name (add a slash if a directory)
     let fileName;
-    if (this.state.isDir) {
-      fileName = `${this.props.file.filename}/`;
+    if (this.props.file.isDir) {
+      fileName = `${this.props.file.fileName}/`;
     } else {
-      fileName = this.props.file.filename;
+      fileName = this.props.file.fileName;
     }
 
     return (

@@ -1,7 +1,12 @@
 import React, { Component } from 'react';
 import TextField from 'material-ui/TextField';
 import RaisedButton from 'material-ui/RaisedButton';
+import SelectField from 'material-ui/SelectField';
+import MenuItem from 'material-ui/MenuItem';
 import LinearProgress from 'material-ui/LinearProgress';
+
+// Import our Protocols
+import { PROTOCOL } from '../../services/transplant';
 // Import the credential storage
 import * as credentialStorage from '../../services/credentialStorage';
 
@@ -19,6 +24,7 @@ export default class Home extends Component {
 
     // State should be used for component based state, where store is used for global app state
     this.state = {
+      protocol: PROTOCOL.SFTP,
       username: '',
       host: '',
       port: '22',
@@ -53,9 +59,21 @@ export default class Home extends Component {
   }
 
   // Our text change handler
-  textChange = (event, newValue) => {
+  inputChange = (event, newValue) => {
     const stateChange = {};
     stateChange[event.target.name] = newValue;
+    this.setState(stateChange);
+  }
+
+  // Our select change handler
+  selectChange = (event, index, newValue) => {
+    const stateChange = {};
+    stateChange.protocol = newValue;
+    if (stateChange.protocol === PROTOCOL.FTP) {
+      stateChange.port = '21';
+    } else if (stateChange.protocol === PROTOCOL.SFTP) {
+      stateChange.port = '22';
+    }
     this.setState(stateChange);
   }
 
@@ -63,6 +81,7 @@ export default class Home extends Component {
   setAccount = (accountKey) => {
     credentialStorage.getAccountWithPass(accountKey).then((account) => {
       this.setState({
+        protocol: account.protocol,
         username: account.username,
         host: account.host,
         port: account.port,
@@ -113,6 +132,7 @@ export default class Home extends Component {
           className="login-form"
           onSubmit={(event) => {
             this.props.connect(event, {
+              protocol: this.state.protocol,
               username: this.state.username,
               host: this.state.host,
               port: this.state.port,
@@ -130,14 +150,31 @@ export default class Home extends Component {
           <div /* Tagline */
             className="tagline"
           >
-            The drag and drop FTP/SFTP client
+            The drag and drop file transfer client
           </div>
+
+          <div className="select-container">
+            <SelectField
+              floatingLabelText="Protocol"
+              name="protocol"
+              value={this.state.protocol}
+              onChange={this.selectChange}
+              >
+              <MenuItem
+                value={PROTOCOL.FTP}
+                primaryText="ftp://" />
+              <MenuItem
+                value={PROTOCOL.SFTP}
+                primaryText="sftp://" />
+            </SelectField>
+          </div>
+
           <TextField /* Username input*/
             className="textfield"
             name="username"
             hintText="transplant"
             value={this.state.username}
-            onChange={this.textChange}
+            onChange={this.inputChange}
             disabled={this.props.isLoading.connect} />
           <span>
             @
@@ -146,7 +183,7 @@ export default class Home extends Component {
             className="textfield textfield--host"
             name="host"
             value={this.state.host}
-            onChange={this.textChange}
+            onChange={this.inputChange}
             hintText="localhost"
             disabled={this.props.isLoading.connect} />
 
@@ -163,7 +200,7 @@ export default class Home extends Component {
                 // Material-ui text input doesn't have a number mode
                 if (/^\d+$/.test(newValue)) {
                   // Call the text change function
-                  this.textChange(event, newValue);
+                  this.inputChange(event, newValue);
                 }
               }} />
           </div>
@@ -172,7 +209,7 @@ export default class Home extends Component {
             <TextField /* Password input*/
               name="password"
               hintText="Password"
-              onChange={this.textChange}
+              onChange={this.inputChange}
               value={this.state.password}
               disabled={this.props.isLoading.connect}
               type="password" />

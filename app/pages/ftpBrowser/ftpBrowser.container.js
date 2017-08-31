@@ -8,7 +8,7 @@ import * as sftpActions from '../../services/sftp/sftp.action';
 function mapStateToProps(state) {
   // Grab our response, use the state to grab the current shared ftp client
   const response = {
-    client: state.sftp.client,
+    protocol: state.sftp.protocol,
     path: '',
     isLoading: {}
   };

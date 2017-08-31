@@ -21,6 +21,6 @@ body {
   overflow-y: hidden;
 }
 
-#root, div[data-reactroot] {
+#root, #root > div[data-reactroot] {
 	height: 100%;
 }

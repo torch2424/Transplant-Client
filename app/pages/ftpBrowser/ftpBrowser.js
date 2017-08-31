@@ -12,10 +12,8 @@ export default class FtpBrowser extends Component {
   // No comment is too dumb, imo
   // obj --> JSON Object, boolean --> true/false
   props: {
-    client: obj,
     isLoading: obj,
     path: string,
-    getInitialDirectory: () => void,
     logout: () => void
   }
 
@@ -23,10 +21,7 @@ export default class FtpBrowser extends Component {
   constructor(props) {
     super(props);
 
-    // Call to get our current directory
-    if (!this.props.path) {
-      this.props.getInitialDirectory(this.props.client);
-    }
+    this.state = {};
   }
 
   // Function to handle files being chosen to be uploaded
@@ -42,7 +37,6 @@ export default class FtpBrowser extends Component {
   render() {
     let filePath;
     if (!this.props.path ||
-    this.props.isLoading.getInitialDirectory ||
     this.props.isLoading.goToDirectory) {
       filePath = (
         <LinearProgress mode="indeterminate" />

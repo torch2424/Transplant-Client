@@ -10,7 +10,7 @@ export default class FileList extends Component {
   // No comment is too dumb, imo
   // obj --> JSON Object
   props: {
-    client: obj,
+    protocol: obj,
     isLoading: obj,
     listFiles: () => void,
     files: Array<obj>,
@@ -23,7 +23,7 @@ export default class FileList extends Component {
     super(props);
 
     if (!this.props.files || this.props.files.length < 1) {
-      this.props.listFiles(this.props.client, '.');
+      this.props.listFiles(this.props.protocol, '.');
     }
   }
 
@@ -40,12 +40,12 @@ export default class FileList extends Component {
     if (!this.props.isLoading.listFiles &&
       this.props.initialPath &&
       this.props.path &&
-      this.props.initialPath.split('/').length <
-      this.props.path.split('/').length
+      this.props.path.length >
+      this.props.initialPath.length
     ) {
       const parentDir = {
-        filename: '..',
-        longname: 'd'
+        fileName: '..',
+        isDir: true
       };
       fileList.push((
         <div key={Math.random()}>
@@ -58,7 +58,9 @@ export default class FileList extends Component {
     }
 
     // Push the files we have in our files array
-    if (this.props.files && this.props.files.length > 0) {
+    if (!this.props.isLoading.listFiles &&
+      this.props.files &&
+      this.props.files.length > 0) {
       this.props.files.forEach((file) => {
         fileList.push((
           <div key={Math.random()}>

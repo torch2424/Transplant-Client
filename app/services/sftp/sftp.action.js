@@ -1,11 +1,8 @@
 // All Redux things start with actions, with how we will edit the single source of truth state.
 // This will be used by a reducer
 
-// This is where business logic is performed
-import * as ssh from 'ssh2';
-
 // Import the transplat wrapper
-import { Transplant, TYPE } from '../transplant';
+import { Transplant } from '../transplant';
 
 // Import the credential storage
 import * as credentialStorage from '../credentialStorage';
@@ -36,37 +33,42 @@ export const DOWNLOAD_FILE_SUCCESS = 'DOWNLOAD_FILE_SUCCESS';
 // Get some electron goodies
 const app = require('electron').remote.app;
 
+// Private Function to add trailing slashes to our paths
+function _addTrailingSlashIfNotPresent(path) {
+  // Check the last character of the path for a slash
+  if (path.substr(-1) !== '/') {
+    const trailingSlashPath = `${path}/`;
+    return trailingSlashPath;
+  }
+
+  return path;
+}
 
 // Function to return our connection action type
 export function connect(event, loginInfo) {
   // Stop the default event
   event.preventDefault();
 
-  const transplant = new Transplant(TYPE.SFTP);
-  transplant.connect(loginInfo.host,
-    loginInfo.username, loginInfo.password, loginInfo.port).then(() => {
-      console.log('hi!', transplant);
-      return true;
-    }).catch(() => {
-      console.log('error!', transplant);
-    });
-
   // Wrap in dispatch to allow communication with reducer
   return (dispatch) => {
-    // Start the connection
-    const client = new ssh.Client();
-    client.on('ready', () => {
-      client.sftp((err, sftpClient) => {
-        if (err) throw err;
+    // Dispatch that we started the connection
+    dispatch({
+      type: CONNECT_START
+    });
 
+    const transplant = new Transplant(loginInfo.protocol);
+    transplant.connect(loginInfo.host,
+      loginInfo.username, loginInfo.password, loginInfo.port).then((connectRes) => {
         // Save our credentials because of the succssful connection
-        credentialStorage.setCredentials(TYPE.SFTP, loginInfo.host,
+        credentialStorage.setCredentials(loginInfo.protocol, loginInfo.host,
           loginInfo.username, loginInfo.password, loginInfo.port)
           .then(() => {
             // Dispatch the sucessful connection ot our reducer
             dispatch({
+              transplant,
               type: CONNECT_SUCCESS,
-              client: sftpClient
+              path: _addTrailingSlashIfNotPresent(connectRes.path),
+              files: connectRes.list
             });
 
             // Move to the ftpbrowser page
@@ -74,18 +76,9 @@ export function connect(event, loginInfo) {
           }).catch((credErr) => {
             console.log(credErr);
           });
+      }).catch((err) => {
+        console.log(err);
       });
-    }).connect({
-      host: loginInfo.host,
-      port: loginInfo.port,
-      username: loginInfo.username,
-      password: loginInfo.password
-    });
-
-    // Dispatch that we started the connection
-    dispatch({
-      type: CONNECT_START
-    });
   };
 }
 
@@ -99,39 +92,9 @@ export function logout() {
   };
 }
 
-// function to get our current directory
-// this should only be used after connect to get the current path
-export function getInitialDirectory(sftpClient) {
-  if (!sftpClient) {
-    // Move to the login page
-    history.push('/');
-    return;
-  }
-
-  // dispatch our actions
-  return (dispatch) => {
-    // start loading
-    dispatch({
-      type: GET_INITIAL_DIRECTORY_START,
-      isLoading: true
-    });
-    // Read the current directory absPath
-    sftpClient.realpath('.', (err, absPath) => {
-      if (err) {
-        throw err;
-      }
-      // Dispatch the sucessful connection ot our reducer
-      dispatch({
-        type: GET_INITIAL_DIRECTORY_SUCCESS,
-        path: absPath
-      });
-    });
-  };
-}
-
 // function to get our files from a directory
-export function listFiles(sftpClient, directory) {
-  if (!sftpClient) {
+export function listFiles(transplant, directory) {
+  if (!transplant) {
     // Move to the login page
     history.push('/');
     return;
@@ -145,22 +108,21 @@ export function listFiles(sftpClient, directory) {
       isLoading: true
     });
     // Read the user home directory
-    sftpClient.readdir(directory, (listErr, list) => {
-      if (listErr) {
-        throw listErr;
-      }
+    transplant.listFiles(directory).then((files) => {
       // Dispatch the sucessful connection ot our reducer
       dispatch({
         type: LIST_FILES_SUCCESS,
-        files: list
+        files
       });
+    }).catch((err) => {
+      console.log(err);
     });
   };
 }
 
 // function to navigate to another directory
-export function goToDirectory(sftpClient, currentDirectory, directory) {
-  if (!sftpClient) {
+export function goToDirectory(transplant, currentDirectory, directory) {
+  if (!transplant) {
     // Move to the login page
     history.push('/');
     return;
@@ -168,7 +130,17 @@ export function goToDirectory(sftpClient, currentDirectory, directory) {
 
   // Define our new directory
   let newDirectory = '';
-  if (currentDirectory.substr(-1) !== '/') {
+  if (directory.includes('..')) {
+    // Pop off the last directory, and join back into the new path
+    const splitPath = currentDirectory.split('/');
+    // Check for an extra element cause by a trailing slash
+    if (splitPath[splitPath.length - 1] === '') {
+      splitPath.splice(splitPath.length - 2);
+    } else {
+      splitPath.pop();
+    }
+    newDirectory = `${splitPath.join('/')}/`;
+  } else if (currentDirectory.substr(-1) !== '/') {
     newDirectory = `${currentDirectory}/${directory}`;
   } else {
     newDirectory = currentDirectory + directory;
@@ -182,32 +154,29 @@ export function goToDirectory(sftpClient, currentDirectory, directory) {
       isLoading: true
     });
     // Read the user home directory
-    sftpClient.opendir(newDirectory, (err) => {
-      if (err) {
-        throw err;
-      }
-
+    transplant.changeDirectory(newDirectory).then((directoryAndList) => {
       // Dispatch the sucessful connection to our reducer
       dispatch({
         type: GO_TO_DIRECTORY_SUCCESS,
-        directory
+        directory: directoryAndList.directory,
+        files: directoryAndList.list
       });
-
-      // List our files
-      // Call the function, which returns a function, that has dispatch as a param
-      listFiles(sftpClient, newDirectory)(dispatch);
+    }).catch((cdErr) => {
+      console.log(cdErr);
     });
   };
 }
 
 // Function to download a file
-export function downloadFile(sftpClient, directory, fileName) {
-  if (!sftpClient) {
+export function downloadFile(transplant, directory, fileName) {
+  if (!transplant) {
     // Move to the login page
     history.push('/');
   }
 
   const filePath = directory + fileName;
+  // Using electron app to get downloads folder:
+  // https://discuss.atom.io/t/get-special-folder-path-in-electron/30198/3
   const downloadPath = `${app.getPath('downloads')}/${fileName}`;
 
   return (dispatch) => {
@@ -218,32 +187,24 @@ export function downloadFile(sftpClient, directory, fileName) {
       remotePath: filePath,
     });
 
-    // Download the file
-    // Using electron app to get downloads folder:
-    // https://discuss.atom.io/t/get-special-folder-path-in-electron/30198/3
-    sftpClient.fastGet(filePath, downloadPath, {
-      step: (transferProgress, fileChunk, totalSize) => {
-        // Returns size in bytes.
-        // So, / 1000000 for MB
-        // / 1000000000 for GB
-        // Or use preety bytes: https://www.npmjs.com/package/pretty-bytes
-        dispatch({
-          type: DOWNLOAD_FILE_PROGRESS,
-          remotePath: filePath,
-          transferProgress,
-          totalSize
-        });
-      }
-    }, (err) => {
-      if (err) {
-        throw err;
-      }
+    const progressCallback = (localFilePath, action, total, transferred) => {
+      dispatch({
+        type: DOWNLOAD_FILE_PROGRESS,
+        remotePath: filePath,
+        transferProgress: transferred,
+        totalSize: total
+      });
+    };
 
+    // Download the file
+    transplant.downloadFile(filePath, downloadPath, progressCallback).then(() => {
       // Dispatch the sucessful connection ot our reducer
       dispatch({
         type: DOWNLOAD_FILE_SUCCESS,
         remotePath: filePath
       });
+    }).catch((err) => {
+      console.log(err);
     });
   };
 }

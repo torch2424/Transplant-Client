@@ -4,8 +4,6 @@ import {
   LOGOUT,
   LIST_FILES_START,
   LIST_FILES_SUCCESS,
-  GET_INITIAL_DIRECTORY_START,
-  GET_INITIAL_DIRECTORY_SUCCESS,
   GO_TO_DIRECTORY_START,
   GO_TO_DIRECTORY_SUCCESS,
   DOWNLOAD_FILE_START,
@@ -25,22 +23,14 @@ type actionType = {
   type: string
 };
 
-function addTrailingSlashIfNotPresent(path) {
-  // Check the last character of the path for a slash
-  if (path.substr(-1) !== '/') {
-    const trailingSlashPath = `${path}/`;
-    return trailingSlashPath;
-  }
-
-  return path;
-}
-
 export default function sftp(state: object = {}, action: actionType) {
   // Get a copy for our new state
   const newState = Object.assign({}, state);
-  // Ensure we have an isLoading Object
+  // Ensure we have an immutable isLoading Object
   if (!newState.isLoading) {
     newState.isLoading = {};
+  } else {
+    newState.isLoading = Object.assign({}, newState.isLoading);
   }
 
   switch (action.type) {
@@ -49,8 +39,10 @@ export default function sftp(state: object = {}, action: actionType) {
       return newState;
     case CONNECT_SUCCESS:
       newState.isLoading.connect = false;
-      newState.client = action.client;
-      newState.files = [];
+      newState.transplant = action.transplant;
+      newState.files = action.files;
+      newState.initialPath = action.path;
+      newState.path = action.path;
       return newState;
     case LOGOUT:
       return {};
@@ -62,36 +54,15 @@ export default function sftp(state: object = {}, action: actionType) {
       newState.isLoading.listFiles = false;
       newState.files = action.files;
       return newState;
-    case GET_INITIAL_DIRECTORY_START:
-      newState.isLoading.getInitialDirectory = true;
-      return newState;
-    case GET_INITIAL_DIRECTORY_SUCCESS:
-      newState.isLoading.getInitialDirectory = false;
-      newState.initialPath =
-        addTrailingSlashIfNotPresent(action.path);
-      newState.path =
-        addTrailingSlashIfNotPresent(action.path);
-      return newState;
     case GO_TO_DIRECTORY_START:
       newState.isLoading.listFiles = true;
       newState.isLoading.goToDirectory = true;
       return newState;
     case GO_TO_DIRECTORY_SUCCESS:
+      newState.isLoading.listFiles = false;
       newState.isLoading.goToDirectory = false;
-
-      // Change the current path
-      if (action.directory.includes('..')) {
-        // Pop off the last directory, and join back into the new path
-        const splitPath = newState.path.split('/');
-        splitPath.splice(splitPath.length - 2);
-        newState.path = `${splitPath.join('/')}/`;
-      } else {
-        // Simply add the next path
-        newState.path =
-          addTrailingSlashIfNotPresent(newState.path);
-        newState.path += `${action.directory}/`;
-      }
-
+      newState.path = action.directory;
+      newState.files = action.files;
       return newState;
     case DOWNLOAD_FILE_START:
       newState.isLoading.downloadFile = true;
