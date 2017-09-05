@@ -1,6 +1,9 @@
 import React, { Component } from 'react';
 import { Link } from 'react-router-dom';
 
+import IconButton from 'material-ui/IconButton';
+import NavigationArrowBack from 'material-ui/svg-icons/navigation/arrow-back';
+
 // Import our components
 import TransferItem from './components/transferItem/transferItem.container';
 
@@ -19,7 +22,7 @@ export default class PendingTransfers extends Component {
 
   render() {
     // Create an array of transferItems to be rendered
-    const transferItems = [];
+    let transferItems = [];
 
     if (this.props.transfers &&
       Object.keys(this.props.transfers).length > 0) {
@@ -34,19 +37,36 @@ export default class PendingTransfers extends Component {
         transferItems.push((
           <div key={Math.random()}>
             <TransferItem
+              className="pending-transfers__transfer-item"
               transfer={this.props.transfers[transferKey]}
               transferPath={transferKey} />
-            <hr />
+            <div>
+              <hr />
+            </div>
           </div>
           ));
       });
+    } else {
+      transferItems = (
+        <main className="pending-transfers__no-transfers animated fadeIn">
+          <h2>
+              No Pending Transfers <span role="img" aria-label="Sad Face Emoji">😞</span>
+          </h2>
+          <div>
+              Transfer some stuff to view its status
+            </div>
+        </main>
+      );
     }
 
     return (
       <div className="pending-transfers">
-        <div className="pending-transfers__back">
-          <Link to="/view">Back</Link>
-        </div>
+        <IconButton
+          className="pending-transfers__back animated fadeInLeft"
+          tooltip="Back"
+          containerElement={<Link to="/view" />}>
+          <NavigationArrowBack />
+        </IconButton>
         <div>
           {transferItems}
         </div>

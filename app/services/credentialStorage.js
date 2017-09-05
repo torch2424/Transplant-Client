@@ -69,11 +69,9 @@ export function setCredentials(protocol, host, username, password, port) {
     }
 
     // Set our passwords
-    keytar.setPassword(SERVICE_NAME, accountKey, password).then(() => {
-      resolve();
-    }).catch((err) => {
-      reject(err);
-    });
+    keytar.setPassword(SERVICE_NAME, accountKey, password)
+    .then(() => resolve())
+    .catch((err) => reject(err));
   });
 }
 
@@ -98,13 +96,11 @@ export function getAccountWithPass(accountKey) {
         db.get('accounts').find({ accountKey }).value());
     keytar.getPassword(SERVICE_NAME, accountKey).then((password) => {
       if (!password) {
-        reject('Could not get the password');
+        return reject('Could not get the password');
       }
 
       account.password = password;
-      resolve(account);
-    }).catch((err) => {
-      reject(err);
-    });
+      return resolve(account);
+    }).catch((err) => reject(err));
   });
 }

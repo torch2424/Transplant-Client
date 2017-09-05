@@ -1,58 +1,104 @@
-.flex-container {
-  width: 100%;
-  height: 100%;
+.home {
 
-  display: flex;
-  align-items: center;
-  justify-content: center;
-	flex-direction: column;
-}
-
-.login-form {
-  text-align: center;
-  margin-left: auto;
-  margin-right: auto;
-}
-
-.tagline {
-  font-style: italic;
-  font-weight: normal;
-  font-size: 0.8em
-}
-
-// Important to override material-ui
-.textfield {
-  width: 100px !important;
-  margin-left: 10px;
-  margin-right: 10px;
-
-  @include modifier('host') {
-    width: 200px !important;
-  }
-
-  @include modifier('port') {
-    width: 75px !important;
-  }
-}
-
-.select-container {
 	display: flex;
+	height: 100%;
+	width: 100%;
+	align-items: center;
 	justify-content: center;
-	text-align: left;
-	width: 10px;
+	flex-direction: column;
 
-	margin-left: auto;
-	margin-right: auto;
-}
-
-.connections-container {
-	@include element('title') {
+	@include element('heading') {
 		text-align: center;
+
+		width: 100%;
+		max-width: $tablet-width;
+		margin-left: auto;
+		margin-right: auto;
+
+		@include element('tagline') {
+				font-style: italic;
+				font-weight: normal;
+				font-size: 0.8em
+		}
+
+		@include element('loading-bar') {
+			width: 80%;
+			max-width: $tablet-width;
+			margin-left: auto;
+			margin-right: auto;
+			margin-top: 10px;
+			margin-bottom: 10px;
+		}
 	}
 
-	@include element('connection') {
-		cursor: pointer;
-		padding-left: 10px;
-		padding-right: 10px;
+	@include element('login') {
+
+		@extend .animated;
+		@extend .fadeIn;
+
+		width: 100%;
+		max-width: $tablet-width;
+
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		justify-content: space-around;
+		margin-left: auto;
+		margin-right: auto;
+
+		@include element('form') {
+		  text-align: center;
+
+			// Important to override material-ui
+			@include element('textfield') {
+			  width: 200px !important;
+			  margin-left: 10px;
+			  margin-right: 10px;
+
+			  @include modifier('host') {
+			    width: 200px !important;
+			  }
+
+			  @include modifier('port') {
+			    width: 75px !important;
+			  }
+			}
+
+			@include element('select-container') {
+				display: flex;
+				justify-content: center;
+				text-align: left;
+				width: 10px;
+
+				margin-left: auto;
+				margin-right: auto;
+			}
+		}
+
+		@include element('connections-container') {
+			display: flex;
+			justify-content: center;
+			align-content: center;
+
+			$buttonOffset: 200px;
+
+			//Our button element In the icon menu
+			button[tabindex] {
+				padding-left: 10px;
+				padding-right: $buttonOffset !important;
+			}
+
+			@include element('current-connection') {
+				height: 48px;
+				line-height: 48px;
+				margin-left: calc(48px - #{$buttonOffset});
+			}
+
+			@include element('connection') {
+				cursor: pointer;
+				padding-left: 10px;
+				padding-right: 10px;
+			}
+		}
 	}
 }

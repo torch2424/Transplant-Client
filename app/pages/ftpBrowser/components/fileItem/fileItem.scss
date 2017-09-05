@@ -1,4 +1,8 @@
 .file-item {
+
+	@extend .animated;
+	@extend .fadeIn;
+
 	@include element('row') {
 		display: flex;
 		align-items: center;

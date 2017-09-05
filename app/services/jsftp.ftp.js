@@ -46,24 +46,10 @@ export function connect(host, username, password, port) {
 
     const client = new JSFtp(credentials);
 
-    client.on('error', (connectErr) => {
-      reject(connectErr);
-    });
+    client.on('error', (connectErr) => reject(connectErr));
 
     client.on('connect', () => {
-      getCurrentDirectory(client).then((path) => {
-        listFiles(client, path).then((list) => {
-          resolve({
-            client,
-            path,
-            list
-          });
-        }).catch((listErr) => {
-          reject(listErr);
-        });
-      }).catch((pathErr) => {
-        reject(pathErr);
-      });
+      resolve(client);
     });
   });
 }
@@ -78,10 +64,10 @@ export function getCurrentDirectory(client) {
     // List the current directory
     client.raw('pwd', (pathErr, path) => {
       if (pathErr) {
-        reject(pathErr);
+        return reject(pathErr);
       }
 
-      resolve(_getPathFromPwd(path.text));
+      return resolve(_getPathFromPwd(path.text));
     });
   });
 }
@@ -95,11 +81,11 @@ export function listFiles(client, directory) {
   return new Promise((resolve, reject) => {
     client.ls(directory, (listErr, list) => {
       if (listErr) {
-        reject(listErr);
+        return reject(listErr);
       }
 
       // Digest our list
-      resolve(_digestFileListResponse(list));
+      return resolve(_digestFileListResponse(list));
     });
   });
 }
@@ -116,18 +102,10 @@ export function changeDirectory(client, directory) {
     // https://github.com/mscdex/node-ftp
     client.raw('cwd', directory, (cdErr) => {
       if (cdErr) {
-        reject(cdErr);
+        return reject(cdErr);
       }
 
-      // List our files
-      listFiles(client, directory).then((list) => {
-        resolve({
-          directory,
-          list
-        });
-      }).catch((listErr) => {
-        reject(listErr);
-      });
+      resolve(directory);
     });
   });
 }
@@ -142,16 +120,16 @@ export function downloadFile(client, remotePath, localPath, progressCallback) {
     // The total does not work in jsftp :p
     client.ls(remotePath, (listErr, list) => {
       if (listErr) {
-        reject(listErr);
+        return reject(listErr);
       }
 
       // Download the file
       client.get(remotePath, localPath, (err) => {
         if (err) {
-          reject(err);
+          return reject(err);
         }
 
-        resolve({
+        return resolve({
           remotePath
         });
       });
@@ -167,6 +145,50 @@ export function downloadFile(client, remotePath, localPath, progressCallback) {
         }
         progressCallback(localPath, TRANSFER_TYPE.GET, totalSize, progress.transferred);
       });
+    });
+  });
+}
+
+/**
+ * Function to upload a file
+ * @returns {Promise} - resolves when finished
+ */
+export function uploadFile(client, remotePath, localPath, progressCallback) {
+  return new Promise((resolve, reject) => {
+      // Download the file
+    client.put(localPath, remotePath, (err) => {
+      if (err) {
+        return reject(err);
+      }
+
+      return resolve({
+        remotePath
+      });
+    });
+
+      // Start watching our progress
+    client.on('progress', (progress) => {
+      // Currently, can't get transfer progress
+      // https://github.com/sergi/jsftp/issues/124
+      // Set to false in the meantime
+      const transferred = false;
+      progressCallback(remotePath, TRANSFER_TYPE.PUT, progress.totalSize, transferred);
+    });
+  });
+}
+
+/**
+ * Function to create a new directory
+ * @returns {Promise} - resolves when finished
+ */
+export function makeDirectory(client, path) {
+  return new Promise((resolve, reject) => {
+    client.raw('mkd', path, (err) => {
+      if (err) {
+        reject(err);
+      }
+
+      resolve(path);
     });
   });
 }

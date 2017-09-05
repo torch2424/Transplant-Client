@@ -2,7 +2,7 @@
 // This will be used by a reducer
 
 // Import the transplat wrapper
-import { Transplant } from '../transplant';
+import { Transplant, TRANSFER_TYPE } from '../transplant';
 
 // Import the credential storage
 import * as credentialStorage from '../credentialStorage';
@@ -30,6 +30,13 @@ export const DOWNLOAD_FILE_START = 'DOWNLOAD_FILE_START';
 export const DOWNLOAD_FILE_PROGRESS = 'DOWNLOAD_FILE_PROGRESS';
 export const DOWNLOAD_FILE_SUCCESS = 'DOWNLOAD_FILE_SUCCESS';
 
+export const UPLOAD_FILE_START = 'UPLOAD_FILE_START';
+export const UPLOAD_FILE_PROGRESS = 'UPLOAD_FILE_PROGRESS';
+export const UPLOAD_FILE_SUCCESS = 'UPLOAD_FILE_SUCCESS';
+
+export const MAKE_DIRECTORY_START = 'MAKE_DIRECTORY_START';
+export const MAKE_DIRECTORY_SUCCESS = 'MAKE_DIRECTORY_SUCCESS';
+
 // Get some electron goodies
 const app = require('electron').remote.app;
 
@@ -46,9 +53,6 @@ function _addTrailingSlashIfNotPresent(path) {
 
 // Function to return our connection action type
 export function connect(event, loginInfo) {
-  // Stop the default event
-  event.preventDefault();
-
   // Wrap in dispatch to allow communication with reducer
   return (dispatch) => {
     // Dispatch that we started the connection
@@ -183,6 +187,7 @@ export function downloadFile(transplant, directory, fileName) {
     // start loading
     dispatch({
       type: DOWNLOAD_FILE_START,
+      transferType: TRANSFER_TYPE.GET,
       isLoading: true,
       remotePath: filePath,
     });
@@ -190,6 +195,7 @@ export function downloadFile(transplant, directory, fileName) {
     const progressCallback = (localFilePath, action, total, transferred) => {
       dispatch({
         type: DOWNLOAD_FILE_PROGRESS,
+        transferType: TRANSFER_TYPE.GET,
         remotePath: filePath,
         transferProgress: transferred,
         totalSize: total
@@ -201,8 +207,89 @@ export function downloadFile(transplant, directory, fileName) {
       // Dispatch the sucessful connection ot our reducer
       dispatch({
         type: DOWNLOAD_FILE_SUCCESS,
-        remotePath: filePath
+        transferType: TRANSFER_TYPE.GET,
+        remotePath: filePath,
       });
+    }).catch((err) => {
+      console.log(err);
+    });
+  };
+}
+
+// Function to upload a file
+export function uploadFile(transplant, localFilePath, remoteDirectory) {
+  if (!transplant) {
+    // Move to the login page
+    history.push('/');
+  }
+
+  // Get the proposed remote file path from the local file and remote directory
+  const pathSplit = localFilePath.split('/');
+  const remoteFilePath =
+    `${_addTrailingSlashIfNotPresent(remoteDirectory)}${pathSplit[pathSplit.length - 1]}`;
+
+  return (dispatch) => {
+    // start loading
+    dispatch({
+      type: UPLOAD_FILE_START,
+      transferType: TRANSFER_TYPE.PUT,
+      isLoading: true,
+      remotePath: remoteFilePath,
+    });
+
+    const progressCallback = (filePath, action, total, transferred) => {
+      dispatch({
+        type: UPLOAD_FILE_PROGRESS,
+        transferType: TRANSFER_TYPE.PUT,
+        remotePath: filePath,
+        transferProgress: transferred,
+        totalSize: total
+      });
+    };
+
+    // Download the file
+    transplant.uploadFile(remoteFilePath, localFilePath, progressCallback).then(() => {
+      // Dispatch the sucessful connection ot our reducer
+      dispatch({
+        type: UPLOAD_FILE_SUCCESS,
+        transferType: TRANSFER_TYPE.PUT,
+        remotePath: remoteFilePath,
+      });
+
+      // Finally, list files of our updated path
+      // Call the function, which returns a function, that has dispatch as a param
+      listFiles(transplant, remoteDirectory)(dispatch);
+    }).catch((err) => {
+      console.log(err);
+    });
+  };
+}
+
+export function makeDirectory(transplant, currentRemotePath, directoryName) {
+  if (!transplant) {
+    // Move to the login page
+    history.push('/');
+  }
+
+  const directoryPath =
+    `${_addTrailingSlashIfNotPresent(currentRemotePath)}${directoryName}`;
+
+  return (dispatch) => {
+    // start loading
+    dispatch({
+      type: MAKE_DIRECTORY_START,
+      path: directoryPath,
+    });
+
+    transplant.makeDirectory(directoryPath).then(() => {
+      dispatch({
+        type: MAKE_DIRECTORY_SUCCESS,
+        path: directoryPath,
+      });
+
+      // Finally, list files of our updated path
+      // Call the function, which returns a function, that has dispatch as a param
+      listFiles(transplant, currentRemotePath)(dispatch);
     }).catch((err) => {
       console.log(err);
     });

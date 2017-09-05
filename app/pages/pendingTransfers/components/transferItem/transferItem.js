@@ -10,6 +10,20 @@ export default class TransferItem extends Component {
     transfer: obj
   }
 
+  // Private Wrapper function for preetyBytes
+  static _getSize(bytes) {
+    if (bytes) {
+      if (typeof bytes === 'number') {
+        return prettyBytes(bytes);
+      } else if (typeof bytes === 'string') {
+        return prettyBytes(parseInt(bytes, 10));
+      }
+      return 'Bad size input';
+    }
+    return 'Loading...';
+  }
+
+
   // Our constructor, where we shall be setting state
   constructor(props) {
     super(props);
@@ -27,9 +41,7 @@ export default class TransferItem extends Component {
     this.state.transferProgress = this.props.transfer.transferProgress;
 
     // Check if we finished the transfer
-    const transferCompleted =
-      this.props.transfer.transferProgress ===
-      this.props.transfer.totalSize;
+    const transferCompleted = this.props.transfer.transferCompleted;
 
 
     let transferStatus;
@@ -40,10 +52,17 @@ export default class TransferItem extends Component {
             Completed.
           </div>
           <div className="transfer-item__total">
-            Size: {prettyBytes(this.state.total)}
+            Size: {TransferItem._getSize(this.state.total)}
           </div>
         </div>
       );
+    } else if (!this.state.progress ||
+      !this.state.total) {
+      transferStatus = (
+        <div>
+          <LinearProgress mode="indeterminate" />
+        </div>
+        );
     } else {
       transferStatus = (
         <div>
@@ -53,7 +72,7 @@ export default class TransferItem extends Component {
             max={this.state.total}
             value={this.state.progress} />
           <div className="transfer-item__progress">
-            {prettyBytes(this.state.progress)} / {prettyBytes(this.state.total)}
+            {TransferItem._getSize(this.state.progress)} / {TransferItem._getSize(this.state.total)}
           </div>
         </div>
       );

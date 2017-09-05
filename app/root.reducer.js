@@ -1,9 +1,9 @@
 import { combineReducers } from 'redux';
 import { routerReducer as router } from 'react-router-redux';
-import sftp from './services/sftp/sftp.reducer';
+import transplant from './services/transplant/transplant.reducer';
 
 const rootReducer = combineReducers({
-  sftp,
+  transplant,
   router,
 });
 

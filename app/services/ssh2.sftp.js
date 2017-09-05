@@ -38,24 +38,9 @@ export function connect(host, username, password, port) {
     sshClient.on('ready', () => {
       sshClient.sftp((connectErr, client) => {
         if (connectErr) {
-          reject(connectErr);
+          return reject(connectErr);
         }
-
-        // Get our current directory and list
-        const pathAndList = [
-          getCurrentDirectory(client),
-          listFiles(client, '.')
-        ];
-
-        Promise.all(pathAndList).then((res) => {
-          resolve({
-            client,
-            path: res[0],
-            list: res[1]
-          });
-        }).catch((err) => {
-          reject(err);
-        });
+        resolve(client);
       });
     }).connect(credentials);
   });
@@ -70,10 +55,10 @@ export function getCurrentDirectory(client) {
   return new Promise((resolve, reject) => {
     client.realpath('.', (pathErr, path) => {
       if (pathErr) {
-        reject(pathErr);
+        return reject(pathErr);
       }
 
-      resolve(path);
+      return resolve(path);
     });
   });
 }
@@ -88,10 +73,10 @@ export function listFiles(client, directory) {
     // List the current directory
     client.readdir(directory, (listErr, list) => {
       if (listErr) {
-        reject(listErr);
+        return reject(listErr);
       }
 
-      resolve(_digestFileListResponse(list));
+      return resolve(_digestFileListResponse(list));
     });
   });
 }
@@ -106,18 +91,10 @@ export function changeDirectory(client, directory) {
     // Read the user home directory
     client.opendir(directory, (cdErr) => {
       if (cdErr) {
-        reject(cdErr);
+        return reject(cdErr);
       }
 
-      // List our files
-      listFiles(client, directory).then((list) => {
-        resolve({
-          directory,
-          list
-        });
-      }).catch((listErr) => {
-        reject(listErr);
-      });
+      resolve(directory);
     });
   });
 }
@@ -138,13 +115,54 @@ export function downloadFile(client, remotePath, localPath, progressCallback) {
         progressCallback(localPath, TRANSFER_TYPE.GET, totalSize, transferProgress);
       }
     }, (err) => {
+      console.log(err);
       if (err) {
-        reject(err);
+        return reject(err);
       }
 
-      resolve({
+      return resolve({
         remotePath
       });
+    });
+  });
+}
+
+/**
+ * Function to upload a file
+ * @returns {Promise} - resolves when finished
+ */
+export function uploadFile(client, remotePath, localPath, progressCallback) {
+  return new Promise((resolve, reject) => {
+    // Download the file
+    client.fastPut(localPath, remotePath, {
+      step: (transferProgress, fileChunk, totalSize) => {
+        progressCallback(remotePath, TRANSFER_TYPE.PUT, totalSize, transferProgress);
+      }
+    }, (err) => {
+      if (err) {
+        return reject(err);
+      }
+
+      return resolve({
+        remotePath
+      });
+    });
+  });
+}
+
+/**
+ * Function to create a new directory
+ * @returns {Promise} - resolves when finished
+ */
+export function makeDirectory(client, path) {
+  return new Promise((resolve, reject) => {
+    console.log(path);
+    client.mkdir(path, (err) => {
+      if (err) {
+        return reject(err);
+      }
+
+      return resolve(path);
     });
   });
 }

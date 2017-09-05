@@ -9,8 +9,8 @@ function mapStateToProps(state) {
     transfers: {},
   };
 
-  if (state.sftp.transfers) {
-    response.transfers = state.sftp.transfers;
+  if (state.transplant.transfers) {
+    response.transfers = state.transplant.transfers;
   }
 
   return response;

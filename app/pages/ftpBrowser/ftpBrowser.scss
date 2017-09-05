@@ -2,15 +2,47 @@
 	height: 100%;
 	display: flex;
 	flex-flow: column;
+	width: 95%;
+	margin-left: auto;
+	margin-right: auto;
+	padding-top: 10px;
+	padding-bottom: 10px;
 
-	@include element('logout') {
+	@include element('icon-row') {
+		display: flex;
+		flex-wrap: wrap;
+		justify-content: flex-end;
+		align-items: center;
+
 		margin-top: 10px;
-		margin-bottom: 10px
+		margin-bottom: 10px;
+
+		@include element('logout') {
+			padding-left: 0px !important;
+			margin-right: auto !important;
+		}
+
+		@include element('upload') {
+			@include element('file-input') {
+				display: none;
+			}
+		}
 	}
 
 	@include element('file-path') {
 		margin-top: 10px;
 		margin-bottom: 10px
+	}
+
+	@include element('new-directory') {
+
+		@include element('icon') {
+			margin-right: 10px;
+		}
+
+		@include element('form') {
+			display: inline-block;
+		}
 	}
 
 	@include element('file-list') {

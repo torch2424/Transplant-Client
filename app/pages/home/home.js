@@ -4,6 +4,9 @@ import RaisedButton from 'material-ui/RaisedButton';
 import SelectField from 'material-ui/SelectField';
 import MenuItem from 'material-ui/MenuItem';
 import LinearProgress from 'material-ui/LinearProgress';
+import IconMenu from 'material-ui/IconMenu';
+import IconButton from 'material-ui/IconButton';
+import AccountCircle from 'material-ui/svg-icons/action/account-circle';
 
 // Import our Protocols
 import { PROTOCOL } from '../../services/transplant';
@@ -28,7 +31,8 @@ export default class Home extends Component {
       username: '',
       host: '',
       port: '22',
-      password: ''
+      password: '',
+      openConnections: false
     };
   }
 
@@ -38,17 +42,11 @@ export default class Home extends Component {
     // Loop through our account keys
     accounts.forEach((account) => {
       savedConnections.push((
-        <div key={Math.random()}>
-          <div
-            className="connections-container__connection"
-            role="button"
-            tabIndex="0"
-            onClick={() => this.setAccount(account.accountKey)}>
-            {account.decodedAccountKey}
-          </div>
-
-          <hr />
-        </div>
+        <MenuItem
+          key={Math.random()}
+          primaryText={account.decodedAccountKey}
+          value={account.accountKey}
+          onClick={() => this.setAccount(account.accountKey)} />
       ));
 
       // Must use setState to cause a re-render on state change
@@ -110,14 +108,18 @@ export default class Home extends Component {
     if (this.state.savedConnections &&
       this.state.savedConnections.length > 0) {
       savedConnectionsContainer = (
-        <div className="connections-container">
-          <h2 className="connections-container__title">
-            Saved Connections:
-          </h2>
+        <div className="home__login__connections-container">
+          <IconMenu
+            iconButtonElement={<IconButton><AccountCircle /></IconButton>}
+            anchorOrigin={{ horizontal: 'left', vertical: 'bottom' }}
+            targetOrigin={{ horizontal: 'left', vertical: 'top' }}
+            maxHeight={300}>
+            {this.state.savedConnections}
+          </IconMenu>
 
-          <hr />
-
-          {this.state.savedConnections}
+          <div className="home__login__connections-container__current-connection">
+            Saved Connections
+          </div>
         </div>
       );
     } else {
@@ -127,104 +129,118 @@ export default class Home extends Component {
     }
 
     return (
-      <div className="flex-container">
-        <form
-          className="login-form"
-          onSubmit={(event) => {
-            this.props.connect(event, {
-              protocol: this.state.protocol,
-              username: this.state.username,
-              host: this.state.host,
-              port: this.state.port,
-              password: this.state.password
-            });
-          }} >
-
-          <div /* Loading Bar for when we are connecting */>
-            { loadingBar }
-          </div>
-
+      <div className="home">
+        <div className="home__heading">
           <h2 /* App Title */>
             Transplant
           </h2>
+
           <div /* Tagline */
-            className="tagline"
-          >
+            className="home__heading__tagline">
             The drag and drop file transfer client
           </div>
 
-          <div className="select-container">
-            <SelectField
-              floatingLabelText="Protocol"
-              name="protocol"
-              value={this.state.protocol}
-              onChange={this.selectChange}
-              >
-              <MenuItem
-                value={PROTOCOL.FTP}
-                primaryText="ftp://" />
-              <MenuItem
-                value={PROTOCOL.SFTP}
-                primaryText="sftp://" />
-            </SelectField>
+          <div>
+            { savedConnectionsContainer }
           </div>
 
-          <TextField /* Username input*/
-            className="textfield"
-            name="username"
-            hintText="transplant"
-            value={this.state.username}
-            onChange={this.inputChange}
-            disabled={this.props.isLoading.connect} />
-          <span>
-            @
-          </span>
-          <TextField /* Host input*/
-            className="textfield textfield--host"
-            name="host"
-            value={this.state.host}
-            onChange={this.inputChange}
-            hintText="localhost"
-            disabled={this.props.isLoading.connect} />
+          <div className="home__heading__loading-bar"/* Loading Bar for when we are connecting */>
+            { loadingBar }
+          </div>
+        </div>
 
-          <div>
-            Port:
-            <TextField /* Port input*/
-              className="textfield textfield--port"
-              name="port"
-              hintText="22"
-              value={this.state.port}
-              disabled={this.props.isLoading.connect}
-              onChange={(event, newValue) => {
+        <div className="home__login">
+          <form
+            className="home__login__form"
+            onSubmit={(event) => {
+            // Stop the default event
+              event.preventDefault();
+              this.props.connect(event, {
+                protocol: this.state.protocol,
+                username: this.state.username,
+                host: this.state.host,
+                port: this.state.port,
+                password: this.state.password
+              });
+            }} >
+
+            <div className="home__login__form__select-container">
+              <SelectField
+                floatingLabelText="Protocol"
+                name="protocol"
+                value={this.state.protocol}
+                onChange={this.selectChange}
+              >
+                <MenuItem
+                  value={PROTOCOL.FTP}
+                  primaryText="ftp://" />
+                <MenuItem
+                  value={PROTOCOL.SFTP}
+                  primaryText="sftp://" />
+              </SelectField>
+            </div>
+
+            <div>
+              <TextField /* Username input*/
+                className="home__login__form__textfield"
+                name="username"
+                floatingLabelText="Username"
+                autoFocus
+                hintText="transplant"
+                value={this.state.username}
+                onChange={this.inputChange}
+                disabled={this.props.isLoading.connect} />
+            </div>
+
+            <div>
+              <TextField /* Host input*/
+                className="home__login__form__textfield--host"
+                name="host"
+                value={this.state.host}
+                onChange={this.inputChange}
+                floatingLabelText="Host"
+                hintText="127.0.0.1"
+                disabled={this.props.isLoading.connect} />
+            </div>
+
+            <div>
+              <TextField /* Port input*/
+                className="home__login__form__textfield--port"
+                name="port"
+                floatingLabelText="Port"
+                hintText="22"
+                value={this.state.port}
+                disabled={this.props.isLoading.connect}
+                onChange={(event, newValue) => {
                 // Ensure it is numbers only
                 // Material-ui text input doesn't have a number mode
-                if (/^\d+$/.test(newValue)) {
+                  if (!newValue || /^\d+$/.test(newValue)) {
                   // Call the text change function
-                  this.inputChange(event, newValue);
-                }
-              }} />
-          </div>
+                    this.inputChange(event, newValue);
+                  }
+                }} />
+            </div>
 
-          <div>
-            <TextField /* Password input*/
-              name="password"
-              hintText="Password"
-              onChange={this.inputChange}
-              value={this.state.password}
-              disabled={this.props.isLoading.connect}
-              type="password" />
-          </div>
+            <div>
+              <TextField /* Password input*/
+                className="home__login__form__textfield"
+                name="password"
+                floatingLabelText="Password"
+                onChange={this.inputChange}
+                value={this.state.password}
+                disabled={this.props.isLoading.connect}
+                type="password" />
+            </div>
 
-          <div>
-            <RaisedButton /* submit/connect button */
-              label="Connect"
-              primary
-              disabled={this.props.isLoading.connect}
-              type="submit" />
-          </div>
-        </form>
-
-        { savedConnectionsContainer }
+            <div>
+              <RaisedButton /* submit/connect button */
+                label="Connect"
+                primary
+                disabled={this.props.isLoading.connect}
+                type="submit" />
+            </div>
+          </form>
+        </div>
       </div>
     );
   }

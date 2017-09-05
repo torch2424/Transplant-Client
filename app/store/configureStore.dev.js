@@ -6,7 +6,7 @@ import { createLogger } from 'redux-logger';
 import rootReducer from '../root.reducer';
 
 // Need these imports for better logging
-import * as sftpActions from '../services/sftp/sftp.action';
+import * as transplantActions from '../services/transplant/transplant.action';
 
 const history = createHashHistory();
 
@@ -31,7 +31,7 @@ const configureStore = (initialState) => {
 
   // Redux DevTools Configuration
   const actionCreators = {
-    ...sftpActions,
+    ...transplantActions,
     ...routerActions,
   };
   // If Redux DevTools Extension is installed use it, otherwise use Redux compose

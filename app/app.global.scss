@@ -10,17 +10,33 @@
 @import './pages/ftpBrowser/components/fileList/fileList.scss';
 @import './pages/ftpBrowser/components/fileItem/fileItem.scss';
 @import './pages/ftpBrowser/components/filePath/filePath.scss';
+@import './pages/pendingTransfers/pendingTransfers.scss';
+@import './pages/pendingTransfers/components/transferItem/transferItem.scss';
 
 // General styles
+
+$appHeight: 100%;
+
+html {
+	height: $appHeight;
+}
+
 body {
   position: relative;
+	height: $appHeight;
+	overflow-y: hidden;
+
   color: $standard;
-  height: 100vh;
   background-color: $bgColor;
   font-family: Arial, Helvetica, Helvetica Neue, serif;
-  overflow-y: hidden;
+	margin: 0px;
 }
 
 #root, #root > div[data-reactroot] {
-	height: 100%;
+	height: $appHeight;
+}
+
+
+.clickable {
+	cursor: pointer;
 }
